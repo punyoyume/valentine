@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Will You Be My Valentine? ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Quicksand:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-color: #ffe4e1; --heart-color: #ff4d6d; }
+        body, html { margin: 0; padding: 0; width: 100%; min-height: 100vh; background-color: var(--bg-color); font-family: 'Quicksand', sans-serif; overflow-x: hidden; }
+
+        /* Floating Background */
+        .bg-hearts { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: -1; }
+        .floating-heart { position: absolute; bottom: -50px; color: var(--heart-color); opacity: 0.6; animation: floatUp 6s linear infinite; }
+        @keyframes floatUp { 0% { transform: translateY(0) rotate(0deg); opacity: 1; } 100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; } }
+
+        /* Screens */
+        .screen { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 20px; box-sizing: border-box; }
+        .active { display: flex; }
+        h1 { font-family: 'Dancing Script', cursive; font-size: 3.5rem; color: #d00000; margin-bottom: 20px; }
+
+        /* Buttons */
+        .btn-container { position: relative; height: 100px; width: 300px; margin-top: 30px; }
+        .btn { padding: 15px 35px; font-size: 1.5rem; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.1); font-family: 'Quicksand', sans-serif; }
+        #yesBtn { background-color: #ff4d6d; color: white; transition: transform 0.2s; }
+        #noBtn { background-color: #808080; color: white; position: absolute; transition: 0.1s ease; }
+
+        /* Menu */
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; width: 95%; max-width: 1000px; }
+        .menu-card { background: white; padding: 25px; border-radius: 20px; border: 3px dashed var(--heart-color); cursor: pointer; font-weight: 700; transition: 0.3s; color: #d00000; font-size: 1.1rem; }
+        .menu-card:hover { transform: scale(1.05); background: #fff0f3; box-shadow: 0 5px 15px rgba(255, 77, 109, 0.2); }
+
+        /* Content Display */
+        .photo-chain { display: flex; flex-direction: column; align-items: center; gap: 0px; width: 100%; padding-bottom: 100px; }
+        .frame { background: white; padding: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 300px; position: relative; border: 8px solid #fff; }
+        .media-item { width: 100%; height: auto; display: block; }
+        .chain-connector { font-size: 2.5rem; color: var(--heart-color); height: 50px; line-height: 50px; }
+        .notepad { background: #fff9c4; padding: 15px; margin: 20px auto; width: 260px; box-shadow: 3px 3px 10px rgba(0,0,0,0.1); font-family: 'Dancing Script', cursive; font-size: 1.4rem; transform: rotate(-1deg); border-top: 20px solid #ffeb3b; }
+
+        .back-btn { position: sticky; bottom: 20px; padding: 12px 25px; background: #ff4d6d; color: white; border: none; border-radius: 50px; cursor: pointer; font-weight: bold; z-index: 100; }
+        
+        /* Hide the Music Player */
+        #music-player { position: absolute; top: -9999px; left: -9999px; visibility: hidden; }
+    </style>
+</head>
+<body onclick="spawnHearts(event)">
+
+    <div class="bg-hearts" id="bgHearts"></div>
+
+    <div id="music-player">
+        <iframe id="youtube-audio" width="0" height="0" src="https://www.youtube.com/embed/9GvXid6f_bM?enablejsapi=1" frameborder="0"></iframe>
+    </div>
+
+    <div id="screen1" class="screen active">
+        <h1 id="mainTitle">Will you be my valentine? ❤️?</h1>
+        <div class="btn-container">
+            <button id="yesBtn" class="btn" onclick="sayYes()">Yes</button>
+            <button id="noBtn" class="btn" onmouseover="moveNo()">No</button>
+        </div>
+    </div>
+
+    <div id="screen2" class="screen">
+        <h1>Our Memories 🌸</h1>
+        <div class="menu-grid">
+            <div class="menu-card" onclick="showCategory(1)">First Valentine</div>
+            <div class="menu-card" onclick="showCategory(2)">First Anniversary</div>
+            <div class="menu-card" onclick="showCategory(3)">2024 to 2025</div>
+            <div class="menu-card" onclick="showCategory(4)">2025 to 2026</div>
+            <div class="menu-card" onclick="showCategory(5)">2nd Valentines</div>
+        </div>
+    </div>
+
+    <div id="screen3" class="screen">
+        <div id="contentTitle"></div>
+        <div id="contentArea" class="photo-chain"></div>
+        <button class="back-btn" onclick="goBack()">⬅ Choose Another Memory</button>
+    </div>
+
+    <script>
+        // --- 1. Audio Logic ---
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        var player;
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('youtube-audio', {
+                events: { 'onReady': onPlayerReady }
+            });
+        }
+        function onPlayerReady(event) {
+            // Player is ready but waiting for "Yes" click to play
+        }
+
+        // --- 2. Animations ---
+        function createBgHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('floating-heart');
+            heart.innerHTML = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            document.getElementById('bgHearts').appendChild(heart);
+            setTimeout(() => heart.remove(), 6000);
+        }
+        setInterval(createBgHeart, 350);
+
+        function spawnHearts(e) {
+            for(let i=0; i<8; i++) {
+                const h = document.createElement('div');
+                h.innerHTML = '💖';
+                h.style.position = 'fixed'; h.style.left = e.clientX + 'px'; h.style.top = e.clientY + 'px';
+                h.style.pointerEvents = 'none'; h.style.transition = 'all 1s ease-out';
+                document.body.appendChild(h);
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 100 + 50;
+                setTimeout(() => {
+                    h.style.transform = `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px)`;
+                    h.style.opacity = '0';
+                }, 10);
+                setTimeout(() => h.remove(), 1000);
+            }
+        }
+
+        // --- 3. Interaction Logic ---
+        function moveNo() {
+            const btn = document.getElementById('noBtn');
+            btn.style.left = Math.random() * (window.innerWidth - 150) + 'px';
+            btn.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+        }
+
+        function sayYes() {
+            document.getElementById('mainTitle').innerHTML = "Yay! Correct Answer! 😍";
+            if (player) player.playVideo(); // Start "Blue" by Kai
+            const rect = document.getElementById('mainTitle').getBoundingClientRect();
+            spawnHearts({ clientX: rect.left + rect.width/2, clientY: rect.top + rect.height/2 });
+            setTimeout(() => { transition('screen1', 'screen2'); }, 1500);
+        }
+
+        function transition(from, to) {
+            document.getElementById(from).classList.remove('active');
+            document.getElementById(to).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function goBack() { transition('screen3', 'screen2'); }
+
+        // --- 4. Photo Data ---
+        const photoData = {
+            1: ["https://instasize.com/p/36bf84fbe7a08699fce51db1f97e9bf37b1d89821610658806f79d4953609305", "https://instasize.com/p/447f1b8497368d250684954b4af4d97a4f8b05373bdd4d975dd69a34591d376e"],
+            2: ["https://instasize.com/p/2230b86f64412b0e373bb8982434655f2ab2ef170e69d385104e8a8b5590ff3d", "https://instasize.com/p/8d326cab7e8eba65cb1d4c7f823211ad74b63f59d3818da065b2b4ff72ba51d1"],
+            3: ["https://instasize.com/p/609788bf197873602379b4f7de1f763cf73e6aff2e8a24005a866e66e486b07b", "https://instasize.com/p/9b31a9dba3ead605ac311485321aa84d42b1320cceb2dc9d3b157df0a46b4fe7", "https://instasize.com/p/f54e48de80f15078214ee58d0b75af018738a536fe6bdec01ef8de0b32afd46b", "https://instasize.com/p/e279b885f4002a63bab832263b96a61241368f9e09fc65ae61b127837016363c"],
+            4: ["https://instasize.com/p/4e06fc684b132a4a56c2eae43d74c92131c23e7873bbb19763c0089e5e05c993", "https://instasize.com/p/95da199088608391fdacc1657aa4988609789494ee7dd579d7dc5402a91afa5a", "https://instasize.com/p/0d3abb733c7057848b6df091c8b3ff8155612bb417ee9daea74994d0edcd5423", "https://instasize.com/p/11feb82e144a18405dd3a5f435330175037997d4f6b7ce1577f29416a6307edf"],
+            5: ["https://instasize.com/p/36bf84fbe7a08699fce51db1f97e9bf37b1d89821610658806f79d4953609305", "https://instasize.com/p/447f1b8497368d250684954b4af4d97a4f8b05373bdd4d975dd69a34591d376e", "https://instasize.com/p/4e06fc684b132a4a56c2eae43d74c92131c23e7873bbb19763c0089e5e05c993", "https://instasize.com/p/95da199088608391fdacc1657aa4988609789494ee7dd579d7dc5402a91afa5a", "https://instasize.com/p/0d3abb733c7057848b6df091c8b3ff8155612bb417ee9daea74994d0edcd5423", "https://instasize.com/p/11feb82e144a18405dd3a5f435330175037997d4f6b7ce1577f29416a6307edf", "https://instasize.com/p/609788bf197873602379b4f7de1f763cf73e6aff2e8a24005a866e66e486b07b", "https://instasize.com/p/9b31a9dba3ead605ac311485321aa84d42b1320cceb2dc9d3b157df0a46b4fe7", "https://instasize.com/p/f54e48de80f15078214ee58d0b75af018738a536fe6bdec01ef8de0b32afd46b", "https://instasize.com/p/e279b885f4002a63bab832263b96a61241368f9e09fc65ae61b127837016363c", "https://instasize.com/p/2230b86f64412b0e373bb8982434655f2ab2ef170e69d385104e8a8b5590ff3d", "https://instasize.com/p/8d326cab7e8eba65cb1d4c7f823211ad74b63f59d3818da065b2b4ff72ba51d1"]
+        };
+
+        const titles = ["", "First Valentine", "First Anniversary", "2024 to 2025", "2025 to 2026", "2nd Valentines"];
+        const messages = ["Thank you for all the memories we made... 💖", "I love every second spent with you 🌹", "You are the best thing that ever happened to me ✨", "Cheers to us and our journey 🥂", "Every day I love you more 😍"];
+
+        function showCategory(num) {
+            const area = document.getElementById('contentArea');
+            document.getElementById('contentTitle').innerHTML = `<h1>${titles[num]}</h1>`;
+            area.innerHTML = "";
+
+            if(num === 5) {
+                area.innerHTML = `<div class="notepad" style="width: 85%; transform: none;">My Dearest... <br><br>I am so incredibly lucky to have you in my life. Every day feels like a blessing because I get to share it with you. You make my life whole, and your love is the greatest gift I have ever received. <br><br>Forever yours 💖🌹✨</div><div class="chain-connector">⛓️</div>`;
+            }
+
+            photoData[num].forEach((link, index) => {
+                area.innerHTML += `
+                    <div class="frame"><img src="${link}" class="media-item"></div>
+                    <div class="notepad">${messages[index % messages.length]}</div>
+                    ${index !== photoData[num].length - 1 ? '<div class="chain-connector">⛓️</div>' : ''}
+                `;
+            });
+            transition('screen2', 'screen3');
+        }
+    </script>
+</body>
+</html>
