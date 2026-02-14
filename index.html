@@ -129,13 +129,31 @@
             btn.style.top = Math.random() * (window.innerHeight - 100) + 'px';
         }
 
-        function sayYes() {
+                function sayYes() {
+            // 1. Update text immediately
             document.getElementById('mainTitle').innerHTML = "Yay! Correct Answer! 😍";
-            if (player) player.playVideo(); // Start "Blue" by Kai
+
+            // 2. Try to play music (Safety wrapper so it doesn't freeze the page)
+            try {
+                if (player && typeof player.playVideo === 'function') {
+                    player.playVideo();
+                }
+            } catch (e) {
+                console.log("Music skipped or not ready, but moving to next page.");
+            }
+
+            // 3. Visual effects (Heart burst)
             const rect = document.getElementById('mainTitle').getBoundingClientRect();
-            spawnHearts({ clientX: rect.left + rect.width/2, clientY: rect.top + rect.height/2 });
-            setTimeout(() => { transition('screen1', 'screen2'); }, 1500);
+            spawnHearts({ clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 });
+
+            // 4. Force move to next page after 1.5 seconds
+            setTimeout(() => { 
+                transition('screen1', 'screen2'); 
+            }, 1500);
         }
+
+            
+        
 
         function transition(from, to) {
             document.getElementById(from).classList.remove('active');
@@ -178,6 +196,7 @@
     </script>
 </body>
 </html>
+
 
 
 
